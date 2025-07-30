@@ -1,2 +1,9 @@
+# VS code files
 .vscode
-build
+
+# Clion files
+.idea
+
+# Build folders
+build*
+cmake-build*

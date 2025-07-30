@@ -6,3 +6,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 project("tictactoe")
 add_subdirectory(src)
+
+enable_testing()
+add_subdirectory(tests)
