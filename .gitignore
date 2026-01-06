@@ -7,3 +7,7 @@
 # Build folders
 build*
 cmake-build*
+
+# clang files 
+.cache
+compile_commands.json
