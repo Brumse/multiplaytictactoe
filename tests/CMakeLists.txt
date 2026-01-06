@@ -12,15 +12,15 @@ target_link_libraries(
 )
 
 add_executable(
-        test_tictactoe
-        test_tictactoe.cpp
+        test_gamelogic
+        test_gamelogic.cpp
         )
 target_link_libraries(
-        test_tictactoe
+        test_gamelogic
         GTest::gtest_main
-        tictactoe
+        gamelogic
 )
 
 include(GoogleTest)
 gtest_discover_tests(hello_test)
-gtest_discover_tests(test_tictactoe)
+gtest_discover_tests(test_gamelogic)
