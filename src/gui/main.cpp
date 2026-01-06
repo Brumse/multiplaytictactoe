@@ -5,6 +5,7 @@
 #include <windows.h>
 
 #include <d2d1.h>
+#include <cassert>
 
 /**
  * @brief null handling release function
@@ -24,7 +25,19 @@ D2D1_ELLIPSE ellipse;
 
 // forward declare window proc
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+void calculateLayout(){
+      
+  assert(pRenderTarget != NULL && "pRenderTarget must exist");
 
+  D2D1_SIZE_F size = pRenderTarget->GetSize();
+  const float x = size.width / 2;
+  const float y = size.height / 2;
+  const float radius = min(x, y);
+  ellipse = D2D1::Ellipse(D2D1::Point2F(x, y), // center
+                                radius,              // radius x
+                                radius               // radius y
+);
+}
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                     PWSTR pCmdLine, int nCmdShow) {
   // define globals
@@ -116,14 +129,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
         // calculate the layout
         if (SUCCEEDED(hr)) {
           if (pRenderTarget != NULL) {
-            D2D1_SIZE_F size = pRenderTarget->GetSize();
-            const float x = size.width / 2;
-            const float y = size.height / 2;
-            const float radius = min(x, y);
-            ellipse = D2D1::Ellipse(D2D1::Point2F(x, y), // center
-                                    radius,              // radius x
-                                    radius               // radius y
-            );
+            calculateLayout();
+
           }
         }
       }
@@ -155,13 +162,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
       D2D1_SIZE_U size = D2D1::SizeU(rc.right, rc.bottom);
       pRenderTarget->Resize(size);
 
-      // calculate the new layout
-      D2D1_SIZE_F rtSize = pRenderTarget->GetSize();
-      const float x = rtSize.width / 2;
-      const float y = rtSize.height / 2;
-      const float radius = min(x, y);
-      ellipse = D2D1::Ellipse(D2D1::Point2F(x, y), radius, radius);
-
+      calculateLayout();
       InvalidateRect(hwnd, // hwnd
                      NULL, // rect
                      FALSE // erase
