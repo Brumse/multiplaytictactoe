@@ -21,29 +21,24 @@ template <class T> void SafeRelease(T **ppT) {
 ID2D1Factory *pFactory;
 ID2D1HwndRenderTarget *pRenderTarget;
 ID2D1SolidColorBrush *pBrush;
-D2D1_ELLIPSE ellipse;
+ID2D1SolidColorBrush *pBrushOutline;
 
 // forward declare window proc
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void calculateLayout(){
       
   assert(pRenderTarget != NULL && "pRenderTarget must exist");
-
+  
   D2D1_SIZE_F size = pRenderTarget->GetSize();
-  const float x = size.width / 2;
-  const float y = size.height / 2;
-  const float radius = min(x, y);
-  ellipse = D2D1::Ellipse(D2D1::Point2F(x, y), // center
-                                radius,              // radius x
-                                radius               // radius y
-);
 }
+
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                     PWSTR pCmdLine, int nCmdShow) {
   // define globals
   pFactory = NULL;
   pRenderTarget = NULL;
   pBrush = NULL;
+  pBrushOutline = NULL;
 
   // register window class
   const wchar_t CLASS_NAME[] = L"TicTacToe";
@@ -99,6 +94,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
   case WM_DESTROY:
     SafeRelease(&pRenderTarget);
     SafeRelease(&pBrush);
+    SafeRelease(&pBrushOutline);
     SafeRelease(&pFactory);
 
     PostQuitMessage(0);
@@ -123,14 +119,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
       );
 
       if (SUCCEEDED(hr)) {
-        const D2D1_COLOR_F color = D2D1::ColorF(1.0f, 1.0f, 0);
+        const D2D1_COLOR_F color = D2D1::ColorF(0x000000);
         hr = pRenderTarget->CreateSolidColorBrush(color, &pBrush);
+
+        const D2D1_COLOR_F colorOutline = D2D1::ColorF(0xFFFFFF);
+        hr = pRenderTarget->CreateSolidColorBrush(colorOutline, &pBrushOutline);
 
         // calculate the layout
         if (SUCCEEDED(hr)) {
           if (pRenderTarget != NULL) {
             calculateLayout();
-
           }
         }
       }
@@ -141,13 +139,34 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 
     pRenderTarget->BeginDraw();
 
-    pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::SkyBlue));
-    pRenderTarget->FillEllipse(ellipse, pBrush);
+    pRenderTarget->Clear(D2D1::ColorF(0x221F21));
+    float padding = 10.f;
+    float radius = 5.f;
+    float w = 100.f;
+    float h = 100.f;
+    float headerY = 50.f;
+    float brushSize = 2.f;
+
+    for(int i = 0;i < 3;i++){
+      for(int j = 0;j < 3;j++){
+        float left = (i + 1)*padding + i*w;
+        float top = headerY + (j + 1)*padding + j*h;
+        float right = left + w;
+        float bottom = top + h;
+        D2D1_ROUNDED_RECT roundedRect = D2D1::RoundedRect(D2D1::RectF(left,top,right,bottom),radius,radius);
+        
+        pRenderTarget->FillRoundedRectangle(roundedRect, pBrush);
+        pRenderTarget->DrawRoundedRectangle(roundedRect, pBrushOutline, brushSize, NULL);
+      }
+    }
+    
+
 
     hr = pRenderTarget->EndDraw();
     if (FAILED(hr) || hr == D2DERR_RECREATE_TARGET) {
       SafeRelease(&pRenderTarget);
       SafeRelease(&pBrush);
+      SafeRelease(&pBrushOutline);
     }
 
     EndPaint(hwnd, &ps);
